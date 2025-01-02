@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "45390957521",
+    "project_id": "chargepoint-fa3c7",
+    "storage_bucket": "chargepoint-fa3c7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45390957521:android:fcf3e1607f5a6f69c6eef0",
+        "android_client_info": {
+          "package_name": "com.westyorks.chargepoint"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "45390957521-udf346c0eeo428r4lec2ditsblg0oqrn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXlCc2udAdmf2hAaG7P0IEQudb7K2yAUY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "45390957521-udf346c0eeo428r4lec2ditsblg0oqrn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45390957521:android:c045a99d3ee3f53bc6eef0",
+        "android_client_info": {
+          "package_name": "com.westyorks.westyorkshirechargepoints"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "45390957521-udf346c0eeo428r4lec2ditsblg0oqrn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXlCc2udAdmf2hAaG7P0IEQudb7K2yAUY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "45390957521-udf346c0eeo428r4lec2ditsblg0oqrn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

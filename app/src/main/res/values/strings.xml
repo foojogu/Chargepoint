@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Chargepoint</string>
+    <string name="app_logo">App Logo</string>
+    <string name="welcome_message">Welcome to West Yorkshire EV Charging</string>
+    <string name="app_description">Find and manage electric vehicle charging points across West Yorkshire</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="logout">Logout</string>
+    <string name="login_failed">Login failed</string>
+    <string name="registration_failed">Registration failed</string>
+    <string name="map_view">Map View</string>
+    <string name="list_view">List View</string>
+    <string name="tap_for_details">Tap for details</string>
+    <string name="name">Name</string>
+    <string name="address">Address</string>
+    <string name="county">County</string>
+    <string name="postcode">Postcode</string>
+    <string name="charger_type">Charger Type</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="add_chargepoint">Add Chargepoint</string>
+    <string name="edit_chargepoint">Edit Chargepoint</string>
+    <string name="save">Save</string>
+    <string name="import_csv">Import CSV</string>
+    <string name="admin_panel">Admin Panel</string>
+    <string name="delete">Delete</string>
+    <string name="search_hint">Search chargepoints...</string>
+</resources>
