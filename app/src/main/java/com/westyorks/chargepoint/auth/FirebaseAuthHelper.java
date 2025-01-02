@@ -56,7 +56,12 @@ public class FirebaseAuthHelper {
     }
 
     public void logoutUser() {
-        mAuth.signOut();
+        try {
+            mAuth.signOut();
+            callback.onSuccess();
+        } catch (Exception e) {
+            callback.onError(e.getMessage());
+        }
     }
 
     public boolean isUserLoggedIn() {

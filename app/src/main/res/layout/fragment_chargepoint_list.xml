@@ -42,4 +42,14 @@
         android:contentDescription="Add new chargepoint"
         app:srcCompat="@android:drawable/ic_input_add" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/logoutButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:text="Logout"
+        android:textColor="@android:color/white"
+        app:icon="@drawable/ic_logout" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.westyorks.chargepoint.adapter.ChargepointAdapter;
+import com.westyorks.chargepoint.auth.FirebaseAuthHelper;
 import com.westyorks.chargepoint.dialog.ChargepointDialog;
 import com.westyorks.chargepoint.model.Chargepoint;
 import com.westyorks.chargepoint.util.CsvImporter;
@@ -27,19 +28,22 @@ import com.westyorks.chargepoint.viewmodel.ChargepointViewModel;
 import java.io.IOException;
 import java.util.List;
 
-public class ChargepointListFragment extends Fragment implements androidx.appcompat.widget.SearchView.OnQueryTextListener {
+public class ChargepointListFragment extends Fragment implements SearchView.OnQueryTextListener, FirebaseAuthHelper.AuthCallback {
     private ChargepointViewModel viewModel;
     private ChargepointAdapter adapter;
     private ActivityResultLauncher<Intent> csvImportLauncher;
     private androidx.appcompat.widget.SearchView searchView;
     private RecyclerView recyclerView;
     private MaterialButton importButton;
+    private MaterialButton logoutButton;
     private FloatingActionButton fabAdd;
+    private FirebaseAuthHelper authHelper;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(ChargepointViewModel.class);
+        authHelper = new FirebaseAuthHelper(this);
         
         csvImportLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -60,6 +64,7 @@ public class ChargepointListFragment extends Fragment implements androidx.appcom
         recyclerView = view.findViewById(R.id.recyclerView);
         searchView = view.findViewById(R.id.searchView);
         importButton = view.findViewById(R.id.importButton);
+        logoutButton = view.findViewById(R.id.logoutButton);
         fabAdd = view.findViewById(R.id.fabAdd);
 
         // Setup RecyclerView
@@ -71,6 +76,16 @@ public class ChargepointListFragment extends Fragment implements androidx.appcom
         // Setup buttons
         importButton.setOnClickListener(v -> openCSVPicker());
         fabAdd.setOnClickListener(v -> showAddDialog());
+        logoutButton.setOnClickListener(v -> {
+            new AlertDialog.Builder(requireContext())
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    authHelper.logoutUser();
+                })
+                .setNegativeButton("No", null)
+                .show();
+        });
 
         // Observe chargepoints
         observeChargepoints();
@@ -157,5 +172,17 @@ public class ChargepointListFragment extends Fragment implements androidx.appcom
             Toast.makeText(requireContext(), "Error importing CSV: " + e.getMessage(), 
                 Toast.LENGTH_LONG).show();
         }
+    }
+
+    @Override
+    public void onSuccess() {
+        // Navigate back to MainActivity after successful logout
+        startActivity(new Intent(requireContext(), MainActivity.class));
+        requireActivity().finish();
+    }
+
+    @Override
+    public void onError(String error) {
+        Toast.makeText(requireContext(), "Logout error: " + error, Toast.LENGTH_SHORT).show();
     }
 }
