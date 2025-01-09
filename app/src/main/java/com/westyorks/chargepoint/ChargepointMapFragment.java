@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -20,6 +21,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.westyorks.chargepoint.model.Chargepoint;
+import com.westyorks.chargepoint.view.MapFrameLayout;
 import com.westyorks.chargepoint.viewmodel.ChargepointViewModel;
 import java.util.List;
 
@@ -41,6 +43,7 @@ public class ChargepointMapFragment extends Fragment implements OnMapReadyCallba
     // Data management
     private ChargepointViewModel viewModel;
     private List<Chargepoint> pendingChargepoints;
+    private MapFrameLayout mapContainer;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,24 +55,46 @@ public class ChargepointMapFragment extends Fragment implements OnMapReadyCallba
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_chargepoint_map, container, false);
+        View view = inflater.inflate(R.layout.fragment_chargepoint_map, container, false);
+        
+        // Get the MapFrameLayout and set up the ViewPager2
+        mapContainer = view.findViewById(R.id.map_container);
+        ViewPager2 viewPager = (ViewPager2) requireActivity().findViewById(R.id.viewPager);
+        mapContainer.setViewPager(viewPager);
+        
+        // Get the map fragment and initialize the map
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
+        
+        return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        // Initialize map fragment
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
-        }
     }
 
     @Override
     public void onMapReady(@NonNull GoogleMap map) {
         googleMap = map;
         mapReady = true;
-        setupMap();
+        mapContainer.setMapReady(true);
+
+        // Set up map UI settings
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            googleMap.setMyLocationEnabled(true);
+        }
+        
+        googleMap.getUiSettings().setZoomControlsEnabled(true);
+        googleMap.getUiSettings().setMapToolbarEnabled(true);
+        
+        // Move camera to West Yorkshire
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(WEST_YORKSHIRE_CENTER, DEFAULT_ZOOM));
+        
+        // Set up custom info window adapter
+        googleMap.setInfoWindowAdapter(new ChargepointInfoWindowAdapter(requireContext()));
         
         // Process any pending chargepoints
         if (pendingChargepoints != null) {
@@ -77,39 +102,7 @@ public class ChargepointMapFragment extends Fragment implements OnMapReadyCallba
             pendingChargepoints = null;
         }
         
-        // Start observing chargepoints
-        observeChargepoints();
-    }
-
-    /**
-     * Sets up the Google Map with initial settings and permissions.
-     */
-    private void setupMap() {
-        if (googleMap == null) return;
-
-        try {
-            // Enable location button if permission is granted
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                googleMap.setMyLocationEnabled(true);
-            }
-            
-            // Configure map UI settings
-            googleMap.getUiSettings().setZoomControlsEnabled(true);
-            googleMap.getUiSettings().setCompassEnabled(true);
-            
-            // Set initial camera position
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(WEST_YORKSHIRE_CENTER, DEFAULT_ZOOM));
-        } catch (SecurityException e) {
-            Log.e(TAG, "Error setting up map: " + e.getMessage());
-            Toast.makeText(requireContext(), "Error: Location permission not granted", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /**
-     * Observes changes in chargepoint data and updates the map accordingly.
-     */
-    private void observeChargepoints() {
+        // Observe chargepoints data
         viewModel.getAllChargepoints().observe(getViewLifecycleOwner(), this::updateMapMarkers);
     }
 
@@ -125,18 +118,27 @@ public class ChargepointMapFragment extends Fragment implements OnMapReadyCallba
             return;
         }
 
-        if (googleMap == null) return;
-
-        // Clear existing markers
         googleMap.clear();
-        
-        // Add markers for each chargepoint
         for (Chargepoint chargepoint : chargepoints) {
             LatLng position = new LatLng(chargepoint.getLatitude(), chargepoint.getLongitude());
+            String snippet = String.format("%s, %s, %s - %s", 
+                chargepoint.getTown(), 
+                chargepoint.getCounty(), 
+                chargepoint.getPostcode(),
+                chargepoint.getChargerType());
             googleMap.addMarker(new MarkerOptions()
-                .position(position)
-                .title(chargepoint.getName())
-                .snippet(String.format("%s - %s", chargepoint.getChargerType(), chargepoint.getChargerStatus())));
+                    .position(position)
+                    .title(chargepoint.getName())
+                    .snippet(snippet));
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mapReady = false;
+        if (mapContainer != null) {
+            mapContainer.setMapReady(false);
         }
     }
 

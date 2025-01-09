@@ -17,6 +17,7 @@ public class ChargepointAdapter extends RecyclerView.Adapter<ChargepointAdapter.
     private List<Chargepoint> allChargepoints = new ArrayList<>();
     private OnItemClickListener clickListener;
     private OnItemLongClickListener longClickListener;
+    private boolean isReadOnly = false;
 
     @NonNull
     @Override
@@ -31,19 +32,24 @@ public class ChargepointAdapter extends RecyclerView.Adapter<ChargepointAdapter.
         Chargepoint current = chargepoints.get(position);
         holder.bind(current);
 
-        holder.itemView.setOnClickListener(v -> {
-            if (clickListener != null) {
-                clickListener.onItemClick(current);
-            }
-        });
+        if (!isReadOnly) {
+            holder.itemView.setOnClickListener(v -> {
+                if (clickListener != null) {
+                    clickListener.onItemClick(current);
+                }
+            });
 
-        holder.itemView.setOnLongClickListener(v -> {
-            if (longClickListener != null) {
-                longClickListener.onItemLongClick(current);
-                return true;
-            }
-            return false;
-        });
+            holder.itemView.setOnLongClickListener(v -> {
+                if (longClickListener != null) {
+                    longClickListener.onItemLongClick(current);
+                    return true;
+                }
+                return false;
+            });
+        } else {
+            holder.itemView.setOnClickListener(null);
+            holder.itemView.setOnLongClickListener(null);
+        }
     }
 
     @Override
@@ -115,5 +121,10 @@ public class ChargepointAdapter extends RecyclerView.Adapter<ChargepointAdapter.
 
     public void setOnItemLongClickListener(OnItemLongClickListener listener) {
         this.longClickListener = listener;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.isReadOnly = readOnly;
+        notifyDataSetChanged();
     }
 }

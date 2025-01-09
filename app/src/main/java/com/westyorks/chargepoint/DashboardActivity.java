@@ -20,6 +20,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.westyorks.chargepoint.auth.FirebaseAuthHelper;
+import com.westyorks.chargepoint.auth.UserPermissionHelper;
 import com.westyorks.chargepoint.viewmodel.ChargepointViewModel;
 
 /**
@@ -38,17 +39,21 @@ public class DashboardActivity extends AppCompatActivity implements FirebaseAuth
     private FirebaseAuthHelper authHelper;
     private DashboardPagerAdapter pagerAdapter;
     private ChargepointViewModel viewModel;
+    private UserPermissionHelper permissionHelper;
     
     // Permission Handling
     private ActivityResultLauncher<String> requestPermissionLauncher;
+    private TabLayoutMediator tabLayoutMediator;
+    private ViewPager2.OnPageChangeCallback pageChangeCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
-        // Initialize Firebase Auth
+        // Initialize Firebase Auth and Permission Helper
         authHelper = new FirebaseAuthHelper(this);
+        permissionHelper = new UserPermissionHelper();
         
         // Check if user is logged in
         if (!authHelper.isUserLoggedIn()) {
@@ -63,6 +68,7 @@ public class DashboardActivity extends AppCompatActivity implements FirebaseAuth
         setupPermissionLauncher();
         initializeViewModel();
         checkLocationPermission();
+        checkUserPermissionsAndSetupViewPager();
     }
 
     /**
@@ -73,6 +79,9 @@ public class DashboardActivity extends AppCompatActivity implements FirebaseAuth
         viewPager = findViewById(R.id.viewPager);
         tabLayout = findViewById(R.id.tabLayout);
 
+        // Enable swipe to change pages
+        viewPager.setUserInputEnabled(true);
+        
         // Show loading indicator initially
         progressBar.setVisibility(View.VISIBLE);
         viewPager.setVisibility(View.GONE);
@@ -102,14 +111,10 @@ public class DashboardActivity extends AppCompatActivity implements FirebaseAuth
         
         // Observe data loading
         viewModel.getAllChargepoints().observe(this, chargepoints -> {
-            // Data is ready, setup UI
-            progressBar.setVisibility(View.GONE);
-            viewPager.setVisibility(View.VISIBLE);
-            tabLayout.setVisibility(View.VISIBLE);
-            
-            // Setup ViewPager if not already setup
-            if (pagerAdapter == null) {
-                setupViewPager();
+            if (progressBar.getVisibility() == View.VISIBLE) {
+                progressBar.setVisibility(View.GONE);
+                viewPager.setVisibility(View.VISIBLE);
+                tabLayout.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -124,28 +129,52 @@ public class DashboardActivity extends AppCompatActivity implements FirebaseAuth
         }
     }
 
-    /**
-     * Sets up the ViewPager2 with its adapter and tab layout.
-     */
-    private void setupViewPager() {
-        // Create and set adapter
-        pagerAdapter = new DashboardPagerAdapter(this);
-        viewPager.setAdapter(pagerAdapter);
-
-        // Attach TabLayout to ViewPager
-        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            tab.setText(position == 0 ? "List" : "Map");
-        }).attach();
-
-        // Disable ViewPager2 swiping when on map
-        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-                // Disable user-initiated scrolling when map is visible
-                viewPager.setUserInputEnabled(position != 1);
+    private void checkUserPermissionsAndSetupViewPager() {
+        permissionHelper.checkEditPermission(hasEditPermission -> {
+            // Initialize ViewPager with permission status
+            pagerAdapter = new DashboardPagerAdapter(this);
+            pagerAdapter.setHasEditPermission(hasEditPermission);
+            viewPager.setAdapter(pagerAdapter);
+            
+            // Setup TabLayout with ViewPager
+            if (tabLayoutMediator != null) {
+                tabLayoutMediator.detach();
             }
+            
+            tabLayoutMediator = new TabLayoutMediator(tabLayout, viewPager,
+                (tab, position) -> tab.setText(position == 0 ? "List" : "Map")
+            );
+            tabLayoutMediator.attach();
+
+            // Register page change callback
+            if (pageChangeCallback != null) {
+                viewPager.unregisterOnPageChangeCallback(pageChangeCallback);
+            }
+            
+            pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    super.onPageSelected(position);
+                    // Update UI based on selected page if needed
+                }
+            };
+            viewPager.registerOnPageChangeCallback(pageChangeCallback);
+
+            progressBar.setVisibility(View.GONE);
+            viewPager.setVisibility(View.VISIBLE);
+            tabLayout.setVisibility(View.VISIBLE);
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (tabLayoutMediator != null) {
+            tabLayoutMediator.detach();
+        }
+        if (pageChangeCallback != null) {
+            viewPager.unregisterOnPageChangeCallback(pageChangeCallback);
+        }
     }
 
     @Override
