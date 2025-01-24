@@ -218,7 +218,7 @@ classDiagram
         +logout()
     }
 
-    class ChargepointMapFragment {
+    class ChargepointMapFragment {  
         -GoogleMap map
         -ChargepointViewModel viewModel
         +onMapReady()
